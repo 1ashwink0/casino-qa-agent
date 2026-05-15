@@ -1,0 +1,33 @@
+{
+  "name": "Casino Schema Sync",
+  "nodes": [
+    {
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 6 }] } },
+      "position": [100, 300]
+    },
+    {
+      "name": "Load Schema JSON",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "parameters": { "filePath": "/data/casino_schema.json" },
+      "position": [300, 300]
+    },
+    {
+      "name": "POST to /schema/ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/schema/ingest",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ $json.data }}"
+      },
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Load Schema JSON" }]] },
+    "Load Schema JSON": { "main": [[{ "node": "POST to /schema/ingest" }]] }
+  }
+}
