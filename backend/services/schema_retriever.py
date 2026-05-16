@@ -3,14 +3,9 @@ from typing import List, Dict
 
 
 def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int = 8) -> Dict:
-    """
-    MVP approach: keyword matching against table/column descriptions.
-    Future: replace with vector similarity search.
-    """
     keywords = _extract_keywords(question, domain_hint)
 
     with db_cursor() as cursor:
-        # Build keyword filter
         keyword_conditions = " OR ".join([
             f"(LOWER(t.table_name) LIKE '%{kw}%' OR LOWER(t.description) LIKE '%{kw}%' OR LOWER(t.domain_category) LIKE '%{kw}%')"
             for kw in keywords
@@ -20,21 +15,21 @@ def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int 
             keyword_conditions = "1=1"
 
         query = f"""
-            SELECT TOP {max_tables}
-                t.id, t.table_name, t.schema_name, t.description, t.domain_category
+            SELECT t.id, t.table_name, t.schema_name, t.description, t.domain_category
             FROM schema_tables t
             WHERE t.is_active = 1
               AND ({keyword_conditions})
             ORDER BY t.domain_category
+            LIMIT {max_tables}
         """
         cursor.execute(query)
         tables = cursor.fetchall()
 
         if not tables:
-            # Fallback: return all tables (limited)
             cursor.execute(f"""
-                SELECT TOP {max_tables} id, table_name, schema_name, description, domain_category
+                SELECT id, table_name, schema_name, description, domain_category
                 FROM schema_tables WHERE is_active = 1
+                LIMIT {max_tables}
             """)
             tables = cursor.fetchall()
 
@@ -45,14 +40,13 @@ def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int 
             table_id, table_name, schema_name, description, domain_category = t
             table_ids.append(table_id)
 
-            # Get columns
             cursor.execute("""
                 SELECT column_name, data_type, is_nullable, is_primary_key,
                        is_foreign_key, description, sample_values
                 FROM schema_columns
                 WHERE table_id = ?
                 ORDER BY is_primary_key DESC, is_foreign_key DESC, column_name
-            """, table_id)
+            """, (table_id,))
             columns = cursor.fetchall()
 
             result["tables"].append({
@@ -73,7 +67,6 @@ def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int 
                 ]
             })
 
-        # Get relationships between found tables
         if table_ids:
             placeholders = ",".join(["?" for _ in table_ids])
             cursor.execute(f"""
@@ -85,7 +78,7 @@ def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int 
                 JOIN schema_tables tt ON r.to_table_id = tt.id
                 WHERE r.from_table_id IN ({placeholders})
                    OR r.to_table_id IN ({placeholders})
-            """, *table_ids, *table_ids)
+            """, (*table_ids, *table_ids))
             rels = cursor.fetchall()
             result["relationships"] = [
                 {
@@ -100,9 +93,6 @@ def get_relevant_schema(question: str, domain_hint: str = None, max_tables: int 
 
 
 def _extract_keywords(question: str, domain_hint: str = None) -> List[str]:
-    """Extract domain-relevant keywords from the question."""
-
-    # Domain keyword map
     domain_map = {
         "wallet": ["wallet", "balance", "fund", "credit", "debit"],
         "bonus": ["bonus", "wagering", "wager", "promotion", "promo"],
@@ -123,7 +113,6 @@ def _extract_keywords(question: str, domain_hint: str = None) -> List[str]:
                 keywords.add(word)
                 keywords.add(domain)
 
-    # Always include some core terms from the question
     for word in question_lower.split():
         if len(word) > 4:
             keywords.add(word.strip("?.,!"))

@@ -7,12 +7,12 @@ router = APIRouter(prefix="/history", tags=["history"])
 def get_history(limit: int = 20):
     with db_cursor() as cursor:
         cursor.execute("""
-            SELECT TOP (?)
-                id, user_question, generated_sql, explanation,
-                tables_used, confidence, model_used, created_at
+            SELECT id, user_question, generated_sql, explanation,
+                   tables_used, confidence, model_used, created_at
             FROM query_history
             ORDER BY created_at DESC
-        """, limit)
+            LIMIT ?
+        """, (limit,))
         rows = cursor.fetchall()
         return [
             {

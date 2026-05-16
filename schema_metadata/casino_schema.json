@@ -1,0 +1,131 @@
+{
+  "tables": [
+    {
+      "table_name": "Players",
+      "schema_name": "dbo",
+      "description": "Master player account table",
+      "domain_category": "player",
+      "columns": [
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique player identifier", "sample_values": "1001, 1002, 1003" },
+        { "column_name": "Username", "data_type": "NVARCHAR(50)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Player login username", "sample_values": "johndoe, janedoe" },
+        { "column_name": "Email", "data_type": "NVARCHAR(100)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Player email address", "sample_values": "john@example.com" },
+        { "column_name": "KYCStatus", "data_type": "NVARCHAR(20)", "is_nullable": true, "is_primary_key": false, "is_foreign_key": false, "description": "KYC verification status", "sample_values": "VERIFIED, PENDING, FAILED" },
+        { "column_name": "RegistrationDate", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Account creation timestamp", "sample_values": "2025-01-15 10:30:00" },
+        { "column_name": "IsActive", "data_type": "BIT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Whether player account is active", "sample_values": "1, 0" },
+        { "column_name": "CurrencyCode", "data_type": "NVARCHAR(3)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "ISO currency code", "sample_values": "USD, EUR, GBP" }
+      ]
+    },
+    {
+      "table_name": "Wallet",
+      "schema_name": "dbo",
+      "description": "Player wallet balance table",
+      "domain_category": "wallet",
+      "columns": [
+        { "column_name": "WalletID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique wallet identifier", "sample_values": "5001, 5002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players table", "sample_values": "1001, 1002" },
+        { "column_name": "Balance", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Current wallet balance", "sample_values": "1500.00, 0.00" },
+        { "column_name": "AvailableBalance", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Balance available for withdrawal", "sample_values": "1200.00, 0.00" },
+        { "column_name": "LastUpdated", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Last balance update timestamp", "sample_values": "2025-06-01 14:30:00" }
+      ]
+    },
+    {
+      "table_name": "WalletTransactions",
+      "schema_name": "dbo",
+      "description": "Wallet credit/debit ledger",
+      "domain_category": "wallet",
+      "columns": [
+        { "column_name": "TransactionID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique transaction identifier", "sample_values": "9001, 9002" },
+        { "column_name": "WalletID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Wallet", "sample_values": "5001, 5002" },
+        { "column_name": "Amount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction amount (positive=credit, negative=debit)", "sample_values": "100.00, -50.00" },
+        { "column_name": "TransactionType", "data_type": "NVARCHAR(50)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Type of wallet transaction", "sample_values": "DEPOSIT, WITHDRAWAL, WAGER, WINNING" },
+        { "column_name": "CreatedAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction timestamp", "sample_values": "2025-06-01 14:30:00" },
+        { "column_name": "ReferenceID", "data_type": "NVARCHAR(100)", "is_nullable": true, "is_primary_key": false, "is_foreign_key": false, "description": "External reference ID", "sample_values": "REF-20250601-001" }
+      ]
+    },
+    {
+      "table_name": "Transactions",
+      "schema_name": "dbo",
+      "description": "Master financial transactions log",
+      "domain_category": "transaction",
+      "columns": [
+        { "column_name": "TxnID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique transaction ID", "sample_values": "10001, 10002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players", "sample_values": "1001, 1002" },
+        { "column_name": "TxnType", "data_type": "NVARCHAR(50)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction type classification", "sample_values": "DEPOSIT, WITHDRAWAL, WITHDRAWAL_REVERSAL, PAYOUT" },
+        { "column_name": "Amount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction amount", "sample_values": "500.00, -200.00" },
+        { "column_name": "Status", "data_type": "NVARCHAR(20)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Current transaction status", "sample_values": "PENDING, COMPLETED, FAILED, REVERSED" },
+        { "column_name": "CreatedAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction creation timestamp", "sample_values": "2025-06-01 14:30:00" },
+        { "column_name": "CompletedAt", "data_type": "DATETIME2", "is_nullable": true, "is_primary_key": false, "is_foreign_key": false, "description": "Transaction completion timestamp", "sample_values": "2025-06-01 14:35:00" }
+      ]
+    },
+    {
+      "table_name": "BonusIssuance",
+      "schema_name": "dbo",
+      "description": "Bonus awards to players",
+      "domain_category": "bonus",
+      "columns": [
+        { "column_name": "BonusID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique bonus identifier", "sample_values": "2001, 2002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players", "sample_values": "1001, 1002" },
+        { "column_name": "BonusAmount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Awarded bonus amount", "sample_values": "100.00, 50.00" },
+        { "column_name": "WageringRequirement", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Total wagering required to release bonus", "sample_values": "3000.00, 1500.00" },
+        { "column_name": "WageringProgress", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Current wagering progress", "sample_values": "1500.00, 0.00" },
+        { "column_name": "Status", "data_type": "NVARCHAR(20)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Bonus lifecycle status", "sample_values": "ACTIVE, COMPLETED, EXPIRED, CANCELLED" },
+        { "column_name": "IssuedAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Bonus issuance timestamp", "sample_values": "2025-06-01 14:30:00" },
+        { "column_name": "ExpiresAt", "data_type": "DATETIME2", "is_nullable": true, "is_primary_key": false, "is_foreign_key": false, "description": "Bonus expiration timestamp", "sample_values": "2025-07-01 14:30:00" }
+      ]
+    },
+    {
+      "table_name": "BonusPayouts",
+      "schema_name": "dbo",
+      "description": "Bonus payout/disbursement records",
+      "domain_category": "bonus",
+      "columns": [
+        { "column_name": "PayoutID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique payout identifier", "sample_values": "3001, 3002" },
+        { "column_name": "BonusID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to BonusIssuance", "sample_values": "2001, 2002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players", "sample_values": "1001, 1002" },
+        { "column_name": "PayoutAmount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Amount paid out", "sample_values": "100.00, 50.00" },
+        { "column_name": "Status", "data_type": "NVARCHAR(20)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Payout status", "sample_values": "PENDING, COMPLETED, FAILED" },
+        { "column_name": "CreatedAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Payout record creation timestamp", "sample_values": "2025-06-01 14:30:00" }
+      ]
+    },
+    {
+      "table_name": "GameRounds",
+      "schema_name": "dbo",
+      "description": "Individual game round records",
+      "domain_category": "game",
+      "columns": [
+        { "column_name": "RoundID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique game round identifier", "sample_values": "4001, 4002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players", "sample_values": "1001, 1002" },
+        { "column_name": "GameID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Identifier for the game played", "sample_values": "101, 102" },
+        { "column_name": "BetAmount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Amount wagered in the round", "sample_values": "10.00, 25.00" },
+        { "column_name": "PayoutAmount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Amount paid out for the round", "sample_values": "0.00, 50.00" },
+        { "column_name": "RoundResult", "data_type": "NVARCHAR(20)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Game round outcome", "sample_values": "WIN, LOSS, DRAW" },
+        { "column_name": "SettledAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Round settlement timestamp", "sample_values": "2025-06-01 14:30:00" }
+      ]
+    },
+    {
+      "table_name": "JackpotWins",
+      "schema_name": "dbo",
+      "description": "Jackpot win records",
+      "domain_category": "game",
+      "columns": [
+        { "column_name": "JackpotID", "data_type": "INT", "is_nullable": false, "is_primary_key": true, "is_foreign_key": false, "description": "Unique jackpot win identifier", "sample_values": "5001, 5002" },
+        { "column_name": "RoundID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to GameRounds", "sample_values": "4001, 4002" },
+        { "column_name": "PlayerID", "data_type": "INT", "is_nullable": false, "is_primary_key": false, "is_foreign_key": true, "description": "Foreign key to Players", "sample_values": "1001, 1002" },
+        { "column_name": "WinAmount", "data_type": "DECIMAL(18,2)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Jackpot prize amount", "sample_values": "10000.00, 50000.00" },
+        { "column_name": "Status", "data_type": "NVARCHAR(20)", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Jackpot payout status", "sample_values": "PENDING, PAID, DISPUTED" },
+        { "column_name": "AwardedAt", "data_type": "DATETIME2", "is_nullable": false, "is_primary_key": false, "is_foreign_key": false, "description": "Jackpot win timestamp", "sample_values": "2025-06-01 14:30:00" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "from_table": "Wallet", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Each player has one wallet" },
+    { "from_table": "WalletTransactions", "from_column": "WalletID", "to_table": "Wallet", "to_column": "WalletID", "description": "Wallet has many transactions" },
+    { "from_table": "Transactions", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Player has many transactions" },
+    { "from_table": "BonusIssuance", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Player has many bonuses" },
+    { "from_table": "BonusPayouts", "from_column": "BonusID", "to_table": "BonusIssuance", "to_column": "BonusID", "description": "Bonus has payouts" },
+    { "from_table": "BonusPayouts", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Player receives bonus payouts" },
+    { "from_table": "GameRounds", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Player has many game rounds" },
+    { "from_table": "JackpotWins", "from_column": "RoundID", "to_table": "GameRounds", "to_column": "RoundID", "description": "Game round may have jackpot win" },
+    { "from_table": "JackpotWins", "from_column": "PlayerID", "to_table": "Players", "to_column": "PlayerID", "description": "Player may win jackpots" }
+  ]
+}

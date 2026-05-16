@@ -11,7 +11,6 @@ router = APIRouter(prefix="/ask", tags=["agent"])
 
 @router.post("", response_model=AskResponse)
 async def ask(request: AskRequest):
-    # 1. Retrieve relevant schema
     schema_context = get_relevant_schema(
         request.question,
         domain_hint=request.domain_hint
@@ -20,26 +19,23 @@ async def ask(request: AskRequest):
     if not schema_context["tables"]:
         raise HTTPException(status_code=400, detail="No schema loaded. Please ingest schema first.")
 
-    # 2. Build prompt
     user_prompt = build_user_prompt(request.question, schema_context)
 
-    # 3. Call LLM
     result, usage = await call_llm(SYSTEM_PROMPT, user_prompt)
 
-    # 4. Log to history
     with db_cursor() as cursor:
         cursor.execute("""
             INSERT INTO query_history
                 (user_question, generated_sql, explanation, tables_used, confidence, model_used, prompt_tokens)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-                       request.question,
-                       result.get("sql"),
-                       result.get("explanation"),
-                       json.dumps(result.get("tables_used", [])),
-                       result.get("confidence"),
-                       "claude-sonnet-4" if "anthropic" in str(usage) else "gpt-4o",
-                       usage.get("input_tokens", usage.get("prompt_tokens", 0))
-                       )
+        """, (
+            request.question,
+            result.get("sql"),
+            result.get("explanation"),
+            json.dumps(result.get("tables_used", [])),
+            result.get("confidence"),
+            "claude-sonnet-4" if "anthropic" in str(usage) else "gpt-4o",
+            usage.get("input_tokens", usage.get("prompt_tokens", 0))
+        ))
 
     return AskResponse(**result)
